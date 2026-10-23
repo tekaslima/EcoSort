@@ -56,18 +56,14 @@ const ECOSORT_CATEGORIAS = {
     simbolo: "📄",
     explicacao:
       "O objeto parece ser papel ou cartão (folhas, jornais, caixas de cartão).",
-    // Aviso em destaque: o modelo atual confunde pacotes de bebida com cartão.
-    aviso:
-      "<strong>É um pacote de leite, sumo ou vinho?</strong> Esses pacotes parecem cartão, mas vão para o <strong>ecoponto amarelo</strong>.",
     instrucoes: [
       "Espalme as caixas para ocuparem menos espaço.",
       "Papel com muita gordura ou restos de comida, guardanapos e lenços usados não vão para o azul.",
-      "Pacotes de leite e sumo (cartão para líquidos) vão para o amarelo, não para o azul.",
     ],
   },
   amarelo: {
     code: "A",
-    material: "Embalagem de plástico ou metal",
+    material: "Embalagem de plástico, metal ou pacote de bebida",
     ecoponto: "Ecoponto amarelo",
     cor: "#f2c200",
     corTexto: "#2b2300",

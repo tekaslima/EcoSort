@@ -43,7 +43,7 @@ h2 { font-size: 1.05rem; margin-bottom: 10px; color: var(--verde-escuro); }
   box-shadow: 0 2px 8px rgba(0,0,0,.15);
 }
 .marca { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.logo { flex: none; background: #fff; border-radius: 12px; padding: 3px; }
+.logo { flex: none; width: 48px; height: 48px; background: #fff; border-radius: 50%; padding: 2px; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
 .topo h1 { font-size: 1.3rem; letter-spacing: .3px; }
 .lema { margin: 0; font-size: .75rem; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
