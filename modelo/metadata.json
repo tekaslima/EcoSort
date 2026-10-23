@@ -1,0 +1,21 @@
+{
+ "tfjsVersion": "1.3.1",
+ "tmVersion": "2.4.5",
+ "packageVersion": "0.8.5",
+ "packageName": "@teachablemachine/image",
+ "timeStamp": "2026-10-23T14:00:22.964Z",
+ "userMetadata": {
+  "origem": "Modelo inicial EcoSort treinado com o conjunto TrashNet (licença MIT)"
+ },
+ "modelName": "ecosort-inicial-trashnet",
+ "grayscale": false,
+ "labels": [
+  "Papel",
+  "Cartão",
+  "Plástico",
+  "Metal",
+  "Vidro",
+  "Outro"
+ ],
+ "imageSize": 224
+}

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1b5e3b">
+  <title>EcoSort</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <img src="logo.svg" alt="" class="logo" width="40" height="40">
+      <div>
+        <h1>EcoSort</h1>
+        <p class="lema">Separação inteligente de resíduos</p>
+      </div>
+    </div>
+    <button id="pilulaArduino" class="pilula" data-estado="desligado" type="button" title="Estado da ligação ao Arduino">
+      <span class="ponto"></span><span id="textoArduino">Arduino desligado</span>
+    </button>
+  </header>
+
+  <main>
+    <!-- Aviso sobre o modelo de IA -->
+    <div id="avisoModelo" class="aviso" hidden></div>
+
+    <!-- Câmara (partilhada entre Identificar e Passadeira) -->
+    <section id="seccaoCamara" class="cartao camara-cartao">
+      <div class="camara" id="caixaCamara">
+        <video id="video" playsinline muted autoplay></video>
+        <img id="fotoCarregada" alt="Imagem carregada" hidden>
+        <div class="moldura" aria-hidden="true"></div>
+        <div id="camaraDesligada" class="camara-desligada">
+          <svg viewBox="0 0 24 24" width="48" height="48" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
+          <p>Câmara desligada</p>
+        </div>
+        <div id="aAnalisar" class="a-analisar" hidden><span class="spinner"></span> A analisar…</div>
+      </div>
+      <p class="dica">Coloque o resíduo dentro do quadrado, sobre um fundo claro e liso, com boa luz.</p>
+      <p id="erroCamara" class="aviso aviso-alerta" hidden></p>
+      <div class="botoes">
+        <button id="btnCamara" class="btn btn-secundario" type="button">Usar câmara</button>
+        <label class="btn btn-secundario" for="inputFoto">Usar foto</label>
+        <!-- Galeria (sem "capture") e câmara nativa do telemóvel (com "capture"). -->
+        <input id="inputFoto" type="file" accept="image/*" hidden>
+        <input id="inputCamaraNativa" type="file" accept="image/*" capture="environment" hidden>
+      </div>
+    </section>
+
+    <!-- ===== Separador: Identificar ===== -->
+    <section id="vistaIdentificar" class="vista">
+      <button id="btnIdentificar" class="btn btn-principal btn-grande" type="button">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.6-.6 3.1-1.6 4.2l.3.3h.8l5 5-1.5 1.5-5-5v-.8l-.3-.3A6.5 6.5 0 1 1 9.5 3zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z"/></svg>
+        Identificar resíduo
+      </button>
+
+      <div id="escolhaDemo" class="cartao" hidden>
+        <h2>Modo demonstração</h2>
+        <p class="pequeno">Sem modelo de IA carregado. Escolha a categoria manualmente para testar a interface e o Arduino.</p>
+        <div class="grelha-demo">
+          <button class="btn demo" data-cat="papel" type="button">Papel/cartão</button>
+          <button class="btn demo" data-cat="amarelo" type="button">Plástico/metal</button>
+          <button class="btn demo" data-cat="vidro" type="button">Vidro</button>
+          <button class="btn demo" data-cat="incerto" type="button">Incerto</button>
+        </div>
+      </div>
+
+      <div id="resultado" class="cartao resultado" hidden></div>
+    </section>
+
+    <!-- ===== Separador: Passadeira ===== -->
+    <section id="vistaPassadeira" class="vista" hidden>
+      <div class="cartao">
+        <h2>Ligação ao Arduino</h2>
+        <label class="campo">Tipo de ligação
+          <select id="tipoLigacao">
+            <option value="serial">Bluetooth clássico (HC-05/HC-06) ou cabo USB</option>
+            <option value="ble">Bluetooth BLE (HM-10, ESP32…)</option>
+            <option value="simulador">Simulador (sem hardware)</option>
+          </select>
+        </label>
+        <p id="infoLigacao" class="pequeno"></p>
+        <div class="botoes">
+          <button id="btnLigar" class="btn btn-principal" type="button">Ligar</button>
+          <button id="btnDesligar" class="btn btn-secundario" type="button" disabled>Desligar</button>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2>Funcionamento automático</h2>
+        <div id="estadoCiclo" class="estado-ciclo">Parado</div>
+        <div class="botoes">
+          <button id="btnIniciar" class="btn btn-principal" type="button" disabled>Iniciar passadeira</button>
+          <button id="btnParar" class="btn btn-perigo" type="button" disabled>PARAR</button>
+        </div>
+        <div id="avisoHold" class="aviso aviso-alerta" hidden>
+          <strong>Passadeira parada.</strong> <span id="motivoHold"></span>
+          Retire o objeto da zona da câmara (ou reposicione-o) e carregue em <em>Retomar</em>.
+          <div class="botoes"><button id="btnRetomar" class="btn btn-principal" type="button">Retomar</button></div>
+        </div>
+        <div id="decisaoManual" class="cartao-interno" hidden>
+          <p><strong>Modo demonstração:</strong> escolha o destino do objeto.</p>
+          <div class="grelha-demo">
+            <button class="btn demo-pass" data-code="P" type="button">Azul</button>
+            <button class="btn demo-pass" data-code="A" type="button">Amarelo</button>
+            <button class="btn demo-pass" data-code="V" type="button">Verde</button>
+            <button class="btn demo-pass" data-code="E" type="button">Vazio</button>
+            <button class="btn demo-pass" data-code="X" type="button">Rejeitar</button>
+          </div>
+        </div>
+        <div class="contadores">
+          <div class="contador azul"><span id="cntP">0</span><small>Azul</small></div>
+          <div class="contador amarelo"><span id="cntA">0</span><small>Amarelo</small></div>
+          <div class="contador verde"><span id="cntV">0</span><small>Verde</small></div>
+          <div class="contador cinza"><span id="cntX">0</span><small>Rejeitados</small></div>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2>Registo</h2>
+        <ul id="registo" class="registo"></ul>
+      </div>
+    </section>
+
+    <!-- ===== Separador: Testes ===== -->
+    <section id="vistaTestes" class="vista" hidden>
+      <div class="cartao">
+        <h2>Registo de testes</h2>
+        <p class="pequeno">Depois de cada identificação, indique se o resultado estava certo. Os resultados ficam guardados neste telemóvel.</p>
+        <div id="resumoTestes"></div>
+        <div class="tabela-scroll"><table id="matriz" class="matriz"></table></div>
+        <h2 class="subtitulo">Testes registados</h2>
+        <p class="pequeno">Se indicou mal o material real, corrija-o aqui.</p>
+        <ol id="listaTestes" class="lista-testes"></ol>
+        <div class="botoes">
+          <button id="btnCopiar" class="btn btn-principal" type="button">Copiar resultados</button>
+          <button id="btnExportar" class="btn btn-secundario" type="button">Exportar CSV</button>
+          <button id="btnLimparTestes" class="btn btn-secundario" type="button">Apagar testes</button>
+        </div>
+        <p id="estadoCopia" class="pequeno" role="status"></p>
+        <textarea id="textoTestes" class="texto-testes" rows="6" readonly hidden aria-label="Resultados dos testes em texto"></textarea>
+      </div>
+    </section>
+
+    <!-- ===== Separador: Definições ===== -->
+    <section id="vistaDefinicoes" class="vista" hidden>
+      <div class="cartao">
+        <h2>Modelo de IA</h2>
+        <label class="campo">Endereço do modelo (Teachable Machine)
+          <input id="inputModelo" type="url" inputmode="url" placeholder="./modelo/ ou https://teachablemachine.withgoogle.com/models/…/">
+        </label>
+        <div class="botoes">
+          <button id="btnCarregarModelo" class="btn btn-principal" type="button">Carregar modelo</button>
+        </div>
+        <div id="infoModelo" class="pequeno"></div>
+      </div>
+      <div class="cartao">
+        <h2>Exigência da decisão</h2>
+        <label class="campo">Confiança mínima: <strong id="valConf"></strong>
+          <input id="rangeConf" type="range" min="0.5" max="0.99" step="0.01">
+        </label>
+        <label class="campo">Margem mínima para a 2.ª classe: <strong id="valMargem"></strong>
+          <input id="rangeMargem" type="range" min="0" max="0.8" step="0.01">
+        </label>
+        <label class="campo">Imagens por análise: <strong id="valFrames"></strong>
+          <input id="rangeFrames" type="range" min="1" max="20" step="1">
+        </label>
+        <div class="botoes">
+          <button id="btnRepor" class="btn btn-secundario" type="button">Repor valores</button>
+        </div>
+      </div>
+      <div class="cartao">
+        <h2>Sobre</h2>
+        <p class="pequeno">A identificação corre no próprio telemóvel (TensorFlow.js). Nenhuma imagem é enviada para a internet. O EcoSort é um protótipo: a classificação por imagem pode falhar, sobretudo entre materiais com aspeto semelhante.</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="separadores" aria-label="Secções">
+    <button class="sep ativo" data-vista="Identificar" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h4V2H2v6h2V4zm16 0v4h2V2h-6v2h4zM4 20v-4H2v6h6v-2H4zm16 0h-4v2h6v-6h-2v4zM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg>
+      Identificar</button>
+    <button id="sepPassadeira" class="sep" data-vista="Passadeira" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 14a3 3 0 1 0 0 6h14a3 3 0 1 0 0-6H5zm0 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm14 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM8 6h8v6H8z"/></svg>
+      Passadeira</button>
+    <button id="sepTestes" class="sep" data-vista="Testes" type="button" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 20h16v2H4zM6 10h3v8H6zm5-4h3v12h-3zm5 7h3v5h-3z"/></svg>
+      Testes</button>
+    <button class="sep" data-vista="Definicoes" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm9 4-2.2-.9-.4-1 1-2.1-1.4-1.4-2.1 1-1-.4L14 3h-4l-.9 2.2-1 .4-2.1-1-1.4 1.4 1 2.1-.4 1L3 10v4l2.2.9.4 1-1 2.1 1.4 1.4 2.1-1 1 .4L10 21h4l.9-2.2 1-.4 2.1 1 1.4-1.4-1-2.1.4-1L21 14z"/></svg>
+      Definições</button>
+  </nav>
+
+  <script src="lib/tf.min.js"></script>
+  <script src="lib/teachablemachine-image.min.js"></script>
+  <script src="config.js"></script>
+  <script src="classifier.js"></script>
+  <script src="arduino.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

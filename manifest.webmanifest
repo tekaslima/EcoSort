@@ -1,0 +1,13 @@
+{
+  "name": "EcoSort",
+  "short_name": "EcoSort",
+  "description": "Separação inteligente de resíduos com a câmara do telemóvel.",
+  "lang": "pt-PT",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f8f5",
+  "theme_color": "#1b5e3b",
+  "icons": [
+    { "src": "logo.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

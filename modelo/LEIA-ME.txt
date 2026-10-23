@@ -1,0 +1,5 @@
+Esta pasta contém o MODELO INICIAL do EcoSort (model.json, metadata.json, weights.bin),
+treinado com o conjunto público TrashNet (licença MIT). Ver MODELO.md na pasta principal.
+
+Para usar o vosso próprio modelo do Teachable Machine, substitua estes 3 ficheiros pelos
+que exportar (Exportar modelo -> Tensorflow.js -> Transferir). Ver GUIA.md, etapa 4.
