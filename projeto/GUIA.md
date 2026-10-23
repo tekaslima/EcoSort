@@ -202,6 +202,8 @@ substituam os 3 ficheiros da pasta `modelo` pelos vossos.
 2. Mude os nomes das classes (clique no lápis) para exatamente:
    - `Papel e cartão`
    - `Plástico e metal`
+   - `Pacotes de bebida` (leite, sumo, vinho — vão para o amarelo; a app trata disto
+     automaticamente. Ter uma classe própria evita que sejam confundidos com cartão.)
    - `Vidro`
    - `Vazio`
    - `Outro` (opcional — clique em **Adicionar uma classe**)

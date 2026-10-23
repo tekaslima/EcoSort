@@ -265,6 +265,7 @@ function mostrarResultado(dec) {
       <div class="resultado-corpo">
         ${dec.demo ? "" : `<small>Confiança do modelo: ${pct(dec.confianca)}</small><div class="barra"><span style="width:${pct(dec.confianca)}"></span></div>`}
         <p>${c.explicacao}</p>
+        ${c.aviso ? `<p class="aviso aviso-alerta">${c.aviso}</p>` : ""}
         <strong>Como separar corretamente:</strong>
         <ul>${c.instrucoes.map((i) => `<li>${i}</li>`).join("")}</ul>
         ${detalhesHtml(dec)}${feedbackHtml(dec)}

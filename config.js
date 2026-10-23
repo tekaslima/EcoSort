@@ -54,6 +54,9 @@ const ECOSORT_CATEGORIAS = {
     simbolo: "📄",
     explicacao:
       "O objeto parece ser papel ou cartão (folhas, jornais, caixas de cartão).",
+    // Aviso em destaque: o modelo atual confunde pacotes de bebida com cartão.
+    aviso:
+      "<strong>É um pacote de leite, sumo ou vinho?</strong> Esses pacotes parecem cartão, mas vão para o <strong>ecoponto amarelo</strong>.",
     instrucoes: [
       "Espalme as caixas para ocuparem menos espaço.",
       "Papel com muita gordura ou restos de comida, guardanapos e lenços usados não vão para o azul.",
@@ -96,8 +99,10 @@ const ECOSORT_MAPA_CLASSES = [
   { palavras: ["vazio", "fundo", "nada", "empty", "background"], categoria: "vazio" },
   { palavras: ["outro", "outros", "desconhecido", "rejeitar", "other"], categoria: "outro" },
   // A ordem importa: "Embalagens de vidro" tem de ser apanhado por "vidro"
-  // antes de qualquer outra regra.
+  // antes de qualquer outra regra, e "Pacotes de bebida" (cartão para
+  // líquidos) vai para o amarelo, antes da regra do papel/cartão.
   { palavras: ["vidro", "verde", "glass"], categoria: "vidro" },
+  { palavras: ["pacote", "bebida", "tetra"], categoria: "amarelo" },
   { palavras: ["papel", "cartao", "azul", "paper"], categoria: "papel" },
   { palavras: ["plastico", "metal", "amarelo", "plastic"], categoria: "amarelo" },
 ];
