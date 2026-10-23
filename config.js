@@ -5,12 +5,14 @@
 
 const ECOSORT_CONFIG = {
   // Onde está o modelo do Teachable Machine.
-  // Opção A (recomendada): copie model.json, metadata.json e weights.bin
-  //   para a pasta "modelo" e deixe "./modelo/".
+  // "./modelo_v2/": versão 2 (fotos públicas + fotos do grupo) — padrão.
+  // "./modelo/": modelo inicial (só fotos públicas TrashNet).
+  // Para um modelo vosso: copie model.json, metadata.json e weights.bin
+  //   para uma pasta e indique-a aqui (ex.: "./modelo_v3/").
   // Opção B: cole o link de partilha do Teachable Machine, por exemplo
   //   "https://teachablemachine.withgoogle.com/models/AbCdEf123/"
   // Também pode alterar este valor na própria aplicação (separador Definições).
-  modelUrl: "./modelo/",
+  modelUrl: "./modelo_v2/",
 
   // --- Regras de decisão (ver GUIA.md, etapa 6, para as afinar) ---
   // Quantas imagens seguidas são analisadas e combinadas em cada identificação.

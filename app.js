@@ -20,6 +20,12 @@ function guardarLocal(chave, valor) {
 }
 
 const PADROES = { ...ECOSORT_CONFIG };
+// A versão 2 passou a ser o modelo padrão: quem tinha o modelo inicial guardado
+// passa para a versão 2 uma única vez (depois pode voltar em Definições).
+if (!lerLocal("ecosort.migracaoV2", false)) {
+  if (lerLocal("ecosort.modelUrl", null) === "./modelo/") guardarLocal("ecosort.modelUrl", "./modelo_v2/");
+  guardarLocal("ecosort.migracaoV2", true);
+}
 const definicoes = {
   modelUrl: lerLocal("ecosort.modelUrl", ECOSORT_CONFIG.modelUrl),
   confiancaMinima: lerLocal("ecosort.confiancaMinima", ECOSORT_CONFIG.confiancaMinima),
