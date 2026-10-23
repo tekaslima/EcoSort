@@ -354,6 +354,7 @@ function registarTeste(real) {
     classe: d.classeVencedora || "",
     confianca: d.confianca != null ? +d.confianca.toFixed(3) : "",
     brilho: d.brilho != null ? Math.round(d.brilho) : "",
+    modelo: definicoes.modelUrl,
   });
   guardarLocal("ecosort.testes", testes);
   const fb = $("feedback");
@@ -427,7 +428,7 @@ $("listaTestes").addEventListener("click", (ev) => {
 });
 
 function testesCsv() {
-  const cab = ["n", "data", "real", "previsto", "estado", "classe", "confianca", "brilho"];
+  const cab = ["n", "data", "real", "previsto", "estado", "classe", "confianca", "brilho", "modelo"];
   return [cab.join(";")]
     .concat(testes.map((t, i) => cab.map((k) => String(k === "n" ? i + 1 : t[k]).replace(/;/g, ",")).join(";")))
     .join("\n");
@@ -464,6 +465,41 @@ $("btnExportar").addEventListener("click", () => {
 
 // Apagar pede um segundo toque para confirmar (sem janelas de diálogo).
 let confirmarApagar = null;
+// Importa testes colados em texto (formato de «Copiar resultados», separado por ";").
+$("btnImportar").addEventListener("click", () => {
+  const linhas = $("textoImportar").value.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (!linhas.length) return;
+  const cab = linhas[0].toLowerCase().includes("real") ? linhas.shift().split(";").map((c) => c.trim()) : null;
+  if (!cab) {
+    $("estadoImportar").textContent = "Não encontrei a linha de cabeçalho (n;data;real;previsto;…). Copie o texto completo.";
+    return;
+  }
+  const validos = new Set([...LINHAS_REAL, ...COLUNAS_PREVISTO]);
+  const chave = (t) => [t.data, t.real, t.previsto, t.confianca].join("|");
+  const existentes = new Set(testes.map(chave));
+  let novos = 0, ignorados = 0;
+  for (const l of linhas) {
+    const v = l.split(";");
+    const t = {};
+    cab.forEach((c, i) => (t[c] = (v[i] ?? "").trim()));
+    if (!validos.has(t.real) || !validos.has(t.previsto)) { ignorados++; continue; }
+    const teste = {
+      data: t.data, real: t.real, previsto: t.previsto, estado: t.estado || "", classe: t.classe || "",
+      confianca: t.confianca === "" ? "" : Number(t.confianca), brilho: t.brilho === "" ? "" : Number(t.brilho),
+      modelo: t.modelo || "",
+    };
+    if (existentes.has(chave(teste))) { ignorados++; continue; }
+    existentes.add(chave(teste));
+    testes.push(teste);
+    novos++;
+  }
+  testes.sort((a, b) => String(a.data).localeCompare(String(b.data)));
+  guardarLocal("ecosort.testes", testes);
+  $("estadoImportar").textContent = `✔ ${novos} testes adicionados` + (ignorados ? `, ${ignorados} ignorados (repetidos ou inválidos).` : ".");
+  $("textoImportar").value = "";
+  desenharTestes();
+});
+
 $("btnLimparTestes").addEventListener("click", () => {
   const btn = $("btnLimparTestes");
   if (!confirmarApagar) {
@@ -698,8 +734,12 @@ async function aoObjeto() {
 // =====================================================================
 // Definições
 // =====================================================================
+const MODELOS_PRESET = ["./modelo/", "./modelo_v2/"];
 function mostrarDefinicoes() {
   $("inputModelo").value = definicoes.modelUrl;
+  const preset = MODELOS_PRESET.includes(definicoes.modelUrl);
+  $("selModelo").value = preset ? definicoes.modelUrl : "outro";
+  $("campoUrl").hidden = preset;
   $("rangeConf").value = definicoes.confiancaMinima;
   $("rangeMargem").value = definicoes.margemMinima;
   $("rangeFrames").value = definicoes.framesPorAnalise;
@@ -724,6 +764,15 @@ $("btnRepor").addEventListener("click", () => {
     guardarLocal("ecosort." + k, PADROES[k]);
   }
   mostrarDefinicoes();
+});
+
+$("selModelo").addEventListener("change", () => {
+  const v = $("selModelo").value;
+  $("campoUrl").hidden = v !== "outro";
+  if (v === "outro") return;
+  definicoes.modelUrl = v;
+  guardarLocal("ecosort.modelUrl", v);
+  iniciarModelo();
 });
 
 $("btnCarregarModelo").addEventListener("click", () => {

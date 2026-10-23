@@ -142,6 +142,13 @@
         </div>
         <p id="estadoCopia" class="pequeno" role="status"></p>
         <textarea id="textoTestes" class="texto-testes" rows="6" readonly hidden aria-label="Resultados dos testes em texto"></textarea>
+        <details class="importar">
+          <summary>Importar testes antigos</summary>
+          <p class="pequeno">Cole aqui o texto copiado com «Copiar resultados» (por exemplo, da versão anterior da aplicação). Os testes repetidos são ignorados.</p>
+          <textarea id="textoImportar" class="texto-testes" rows="6" aria-label="Testes a importar"></textarea>
+          <div class="botoes"><button id="btnImportar" class="btn btn-secundario" type="button">Adicionar testes</button></div>
+          <p id="estadoImportar" class="pequeno" role="status"></p>
+        </details>
       </div>
     </section>
 
@@ -149,11 +156,20 @@
     <section id="vistaDefinicoes" class="vista" hidden>
       <div class="cartao">
         <h2>Modelo de IA</h2>
-        <label class="campo">Endereço do modelo (Teachable Machine)
-          <input id="inputModelo" type="url" inputmode="url" placeholder="./modelo/ ou https://teachablemachine.withgoogle.com/models/…/">
+        <label class="campo">Modelo em uso
+          <select id="selModelo">
+            <option value="./modelo/">Modelo inicial (fotos públicas)</option>
+            <option value="./modelo_v2/">Versão 2 – teste (inclui as vossas fotos)</option>
+            <option value="outro">Outro endereço…</option>
+          </select>
         </label>
-        <div class="botoes">
-          <button id="btnCarregarModelo" class="btn btn-principal" type="button">Carregar modelo</button>
+        <div id="campoUrl" hidden>
+          <label class="campo">Endereço do modelo (Teachable Machine)
+            <input id="inputModelo" type="url" inputmode="url" placeholder="https://teachablemachine.withgoogle.com/models/…/">
+          </label>
+          <div class="botoes">
+            <button id="btnCarregarModelo" class="btn btn-principal" type="button">Carregar modelo</button>
+          </div>
         </div>
         <div id="infoModelo" class="pequeno"></div>
       </div>

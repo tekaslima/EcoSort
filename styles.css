@@ -220,3 +220,5 @@ summary { cursor: pointer; color: var(--verde-escuro); font-weight: 600; }
   .lista-testes .n, .lista-testes .prev { grid-column: 1; }
 }
 .texto-testes { width: 100%; font: .75rem ui-monospace, monospace; border: 1px solid var(--borda); border-radius: 8px; padding: 8px; }
+.importar { margin-top: 12px; }
+.importar textarea { margin-top: 6px; }
