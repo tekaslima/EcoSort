@@ -63,7 +63,7 @@ const ECOSORT_CATEGORIAS = {
   },
   amarelo: {
     code: "A",
-    material: "Embalagem de plástico, metal",
+    material: "Embalagem de plástico ou metal",
     ecoponto: "Ecoponto amarelo",
     cor: "#f2c200",
     corTexto: "#2b2300",
