@@ -8,7 +8,7 @@
   <link rel="icon" href="logo-192.png" type="image/png">
   <link rel="apple-touch-icon" href="logo-192.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=202610231550">
+  <link rel="stylesheet" href="styles.css?v=202611012003">
 </head>
 <body>
   <header class="topo">
@@ -38,7 +38,7 @@
           <svg viewBox="0 0 24 24" width="48" height="48" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
           <p>Câmara desligada</p>
         </div>
-        <div id="aAnalisar" class="a-analisar" hidden><span class="spinner"></span> A analisar…</div>
+        <div id="aAnalisar" class="a-analisar" hidden><span class="spinner"></span> <span id="textoAnalisar">A analisar…</span></div>
       </div>
       <p class="dica">Coloque o resíduo dentro do quadrado, sobre um fundo claro e liso, com boa luz.</p>
       <p id="erroCamara" class="aviso aviso-alerta" hidden></p>
@@ -191,8 +191,8 @@
       </div>
       <div class="cartao">
         <h2>Sobre</h2>
-        <p class="pequeno">A identificação corre no próprio telemóvel (TensorFlow.js). Nenhuma imagem é enviada para a internet. O EcoSort é um protótipo: a classificação por imagem pode falhar, sobretudo entre materiais com aspeto semelhante.</p>
-        <p class="pequeno">Versão da aplicação: <strong>23/10/2026 15:50</strong></p>
+        <p class="pequeno">Com o modelo local (TensorFlow.js), a identificação corre no próprio telemóvel e nenhuma imagem sai dele. Com o Claude (só na página do claude.ai), a fotografia é enviada ao Claude para ser analisada. O EcoSort é um protótipo: a classificação por imagem pode falhar, sobretudo entre materiais com aspeto semelhante.</p>
+        <p class="pequeno">Versão da aplicação: <strong>01/11/2026 20:03</strong></p>
       </div>
     </section>
   </main>
@@ -214,9 +214,10 @@
 
   <script src="lib/tf.min.js"></script>
   <script src="lib/teachablemachine-image.min.js"></script>
-  <script src="config.js?v=202610231550"></script>
-  <script src="classifier.js?v=202610231550"></script>
-  <script src="arduino.js?v=202610231550"></script>
-  <script src="app.js?v=202610231550"></script>
+  <script src="config.js?v=202611012003"></script>
+  <script src="classifier.js?v=202611012003"></script>
+  <script src="arduino.js?v=202611012003"></script>
+  <script src="claude.js?v=202611012003"></script>
+  <script src="app.js?v=202611012003"></script>
 </body>
 </html>

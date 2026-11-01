@@ -65,11 +65,15 @@ function aviso(html, tipo = "") {
   el.hidden = !html;
 }
 
+// "claude" não é um modelo local: nesse caso carrega-se a versão padrão como reserva.
+const usarClaude = () => definicoes.modelUrl === "claude" && ClassificadorClaude.disponivel();
+const enderecoModeloLocal = () => (definicoes.modelUrl === "claude" ? ECOSORT_CONFIG.modelUrl : definicoes.modelUrl);
+
 async function iniciarModelo() {
   aviso('<span class="spinner" style="border-color:#2e8b5755;border-top-color:#2e8b57;display:inline-block;vertical-align:middle"></span> A carregar o modelo de IA…');
   $("infoModelo").textContent = "";
   try {
-    const { classes, avisos, temVazio } = await Classificador.carregar(definicoes.modelUrl);
+    const { classes, avisos, temVazio } = await Classificador.carregar(enderecoModeloLocal());
     aviso(avisos.length ? "<strong>Modelo carregado, com avisos:</strong><br>" + avisos.map(escapar).join("<br>") : "", avisos.length ? "aviso-alerta" : "");
     $("infoModelo").innerHTML =
       "<strong>Classes do modelo:</strong><br>" +
@@ -206,8 +210,55 @@ let ultimaDecisao = null;
 
 $("btnIdentificar").addEventListener("click", identificar);
 
+// Imagem para o Claude: a fotografia inteira, com o lado maior até 1024 px.
+function obterImagemParaClaude() {
+  const fonte = usarFoto ? $("fotoCarregada") : video;
+  const w = usarFoto ? fonte.naturalWidth : fonte.videoWidth;
+  const h = usarFoto ? fonte.naturalHeight : fonte.videoHeight;
+  if (!w || !h) return Promise.resolve(null);
+  const escala = Math.min(1, 1024 / Math.max(w, h));
+  const c = document.createElement("canvas");
+  c.width = Math.round(w * escala);
+  c.height = Math.round(h * escala);
+  c.getContext("2d").drawImage(fonte, 0, 0, c.width, c.height);
+  return new Promise((r) => c.toBlob(r, "image/jpeg", 0.85));
+}
+
+const MENSAGENS_CLAUDE = {
+  not_granted: "A página não foi autorizada a usar o Claude. A aplicação passou a usar o modelo local.",
+  sampling_disabled: "O Claude não está disponível nesta conta. A aplicação passou a usar o modelo local.",
+  rate_limited: "Foram feitos muitos pedidos ao Claude em pouco tempo. Espere um pouco e tente de novo.",
+  session_expired: "A sessão do claude.ai terminou. Inicie sessão de novo e tente outra vez.",
+  image_rejected: "O Claude não conseguiu ler esta imagem. Tente outra fotografia.",
+  refused: "O Claude não respondeu a esta imagem. Tente outra fotografia.",
+  invalid_json: "O Claude deu uma resposta que a aplicação não percebeu. Tente de novo.",
+};
+const ERROS_PERMANENTES = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed", "images_unavailable"];
+
+async function identificarComClaude() {
+  $("textoAnalisar").textContent = "A perguntar ao Claude…";
+  try {
+    const blob = await obterImagemParaClaude();
+    if (!blob) throw { code: "sem_imagem", message: "Sem imagem." };
+    const miniatura = obterImagem();
+    const dec = await ClassificadorClaude.analisar(blob);
+    dec.imagem = miniatura;
+    mostrarResultado(dec);
+  } catch (e) {
+    console.warn(e);
+    if (ERROS_PERMANENTES.includes(e?.code)) {
+      ClassificadorClaude.desativar();
+      definicoes.modelUrl = ECOSORT_CONFIG.modelUrl;
+      atualizarOpcaoClaude();
+    }
+    mostrarResultado({ estado: "erro", mensagem: MENSAGENS_CLAUDE[e?.code] || "Não foi possível falar com o Claude (sem internet?). Tente de novo." });
+  } finally {
+    $("textoAnalisar").textContent = "A analisar…";
+  }
+}
+
 async function identificar() {
-  if (!Classificador.pronto()) {
+  if (!usarClaude() && !Classificador.pronto()) {
     $("escolhaDemo").hidden = false;
     $("escolhaDemo").scrollIntoView({ behavior: "smooth", block: "center" });
     return;
@@ -219,6 +270,12 @@ async function identificar() {
   }
   $("btnIdentificar").disabled = true;
   $("aAnalisar").hidden = false;
+  if (usarClaude()) {
+    await identificarComClaude();
+    $("btnIdentificar").disabled = false;
+    $("aAnalisar").hidden = true;
+    return;
+  }
   try {
     const dec = await Classificador.analisar(obterImagem, {
       ...definicoes,
@@ -269,8 +326,8 @@ function mostrarResultado(dec) {
         </div>${mini}
       </div>
       <div class="resultado-corpo">
-        ${dec.demo ? "" : `<small>Confiança do modelo: ${pct(dec.confianca)}</small><div class="barra"><span style="width:${pct(dec.confianca)}"></span></div>`}
-        <p>${c.explicacao}</p>
+        ${dec.demo ? "" : dec.fonte === "claude" ? `<small>Identificado pelo Claude · confiança ${escapar(dec.confiancaTexto)}</small>` : `<small>Confiança do modelo: ${pct(dec.confianca)}</small><div class="barra"><span style="width:${pct(dec.confianca)}"></span></div>`}
+        <p>${dec.fonte === "claude" && dec.explicacao ? escapar(dec.explicacao) : c.explicacao}</p>
         ${c.aviso ? `<p class="aviso aviso-alerta">${c.aviso}</p>` : ""}
         <strong>Como separar corretamente:</strong>
         <ul>${c.instrucoes.map((i) => `<li>${i}</li>`).join("")}</ul>
@@ -293,6 +350,12 @@ function mostrarResultado(dec) {
       pouca_luz: { titulo: "Pouca luz", texto: "A imagem está demasiado escura. Aumente a iluminação e tente de novo." },
       erro: { titulo: "Ocorreu um erro", texto: escapar(dec.mensagem || "") },
     }[dec.estado];
+    if (dec.fonte === "claude" && dec.explicacao) {
+      textos.texto =
+        (dec.objeto ? `<strong>${escapar(dec.objeto)}</strong>: ` : "") +
+        escapar(dec.explicacao) +
+        (dec.verificar ? `<br><em>Verifique: ${escapar(dec.verificar)}</em>` : "");
+    }
     html = `
       <div class="resultado-cabecalho">
         <div class="simbolo-ecoponto" aria-hidden="true">${dec.estado === "pouca_luz" ? "💡" : "❔"}</div>
@@ -740,11 +803,26 @@ async function aoObjeto() {
 // =====================================================================
 // Definições
 // =====================================================================
-const MODELOS_PRESET = ["./modelo/", "./modelo_v2/"];
+const MODELOS_PRESET = ["./modelo/", "./modelo_v2/", "claude"];
+
+// Mostra a opção "Claude" só onde está disponível (página do claude.ai).
+function atualizarOpcaoClaude() {
+  let op = $("selModelo").querySelector('option[value="claude"]');
+  if (ClassificadorClaude.disponivel() && !op) {
+    op = document.createElement("option");
+    op.value = "claude";
+    op.textContent = "Claude (precisa de internet) – recomendado";
+    $("selModelo").prepend(op);
+  } else if (!ClassificadorClaude.disponivel() && op) {
+    op.remove();
+  }
+  mostrarDefinicoes();
+}
 function mostrarDefinicoes() {
   $("inputModelo").value = definicoes.modelUrl;
-  const preset = MODELOS_PRESET.includes(definicoes.modelUrl);
-  $("selModelo").value = preset ? definicoes.modelUrl : "outro";
+  const atual = definicoes.modelUrl === "claude" && !ClassificadorClaude.disponivel() ? ECOSORT_CONFIG.modelUrl : definicoes.modelUrl;
+  const preset = MODELOS_PRESET.includes(atual);
+  $("selModelo").value = preset ? atual : "outro";
   $("campoUrl").hidden = preset;
   $("rangeConf").value = definicoes.confiancaMinima;
   $("rangeMargem").value = definicoes.margemMinima;
@@ -778,7 +856,7 @@ $("selModelo").addEventListener("change", () => {
   if (v === "outro") return;
   definicoes.modelUrl = v;
   guardarLocal("ecosort.modelUrl", v);
-  iniciarModelo();
+  if (v !== "claude") iniciarModelo();
 });
 
 $("btnCarregarModelo").addEventListener("click", () => {
@@ -835,6 +913,11 @@ window.addEventListener("hashchange", verificarAdmin);
 
 aplicarSeccoes();
 verificarAdmin();
+// Na página do claude.ai, o Claude passa a ser o padrão para quem não escolheu outro modelo.
+ClassificadorClaude.iniciar().then((ok) => {
+  if (ok && lerLocal("ecosort.modelUrl", null) === null) definicoes.modelUrl = "claude";
+  atualizarOpcaoClaude();
+});
 mostrarDefinicoes();
 atualizarInfoLigacao();
 if (window.isSecureContext) iniciarModelo();
